@@ -1,0 +1,12 @@
+/build
+/.vscode
+gui.cpp
+gui.exe
+interactiveTest.cpp
+interactiveTest.exe
+popcount.cpp
+popcount.exe
+piecemove.cpp
+piecemove.exe
+bitboards.cpp
+bitboards.exe
