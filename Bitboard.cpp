@@ -1,7 +1,7 @@
 #include "Bitboard.h"
 
 
-// TODO: Add methods for bitboard struct
+// TODO: ISSUE OPERATOR OVERLOADING FOR << AND >> NOT DONE. WRITE CUSTOM FUNCTION TO SHIFT STD::UINT64_T TYPES
 
 
 /*
@@ -41,6 +41,18 @@ Bitboard operator^(const Bitboard& boardA, std::uint64_t boardB){
 
 Bitboard operator^(const Bitboard& boardA, const Bitboard& boardB){
     return (boardA.board ^ boardB.board);
+}
+
+
+
+// shifting for std::uint64_t
+std::uint64_t shiftIntLeft(std::uint64_t board, int amount){
+    return (board << amount);
+}
+
+
+std::uint64_t shiftIntRight(std::uint64_t board, int amount){
+    return (board >> amount);
 }
 
 
@@ -123,6 +135,84 @@ std::uint64_t antidiagMask(int rank, int file){
     
     return admask;
 }
+
+
+// DIRECTIONAL BOARD SHIFTS
+// note: uint64_t has a HARD BOUNDARY at 64 bits => anything that overflows is DISCARDED
+std::uint64_t shiftNorth(std::uint64_t board){
+    return shiftIntLeft(board, 8);
+}
+
+std::uint64_t shiftSouth(std::uint64_t board){
+    return shiftIntRight(board, 8);
+}
+
+std::uint64_t shiftEast(std::uint64_t board){
+    board &= NOT_H_FILE;
+    return shiftIntLeft(board, 1);
+}
+
+std::uint64_t shiftWest(std::uint64_t board){
+    board &= NOT_A_FILE;
+    return shiftIntRight(board, 1);
+}
+
+std::uint64_t shiftNW(std::uint64_t board){
+    board &= NOT_A_FILE;
+    return shiftIntLeft(board, 7);
+}
+
+std::uint64_t shiftNE(std::uint64_t board){
+    board &= NOT_H_FILE;
+    return shiftIntLeft(board, 9);
+}
+
+std::uint64_t shiftSW(std::uint64_t board){
+    board &= NOT_A_FILE;
+    return shiftIntRight(board, 9);
+}
+
+std::uint64_t shiftSE(std::uint64_t board){
+    board &= NOT_H_FILE;
+    return shiftIntRight(board, 7);
+}
+
+
+
+// PAWN PUSHES AND CAPTURES
+std::uint64_t wPawnPushes(std::uint64_t wp, std::uint64_t empty){
+    std::uint64_t rank2 = shiftIntLeft(0xFFULL, 8);
+    std::uint64_t singlesquare = shiftIntLeft(wp, 8);
+    singlesquare &= empty;
+
+    std::uint64_t twosquares = rank2 | wp;
+    twosquares = shiftIntLeft(wp, 16);
+    twosquares &= empty;
+
+    return (singlesquare | twosquares);
+}
+
+
+std::uint64_t wPawnCaptures(std::uint64_t wp, std::uint64_t enemy);
+
+
+std::uint64_t bPawnPushes(std::uint64_t bp, std::uint64_t empty){
+    std::uint64_t rank7 = (0xFFULL << 48);
+    std::uint64_t singlesquare = shiftIntRight(bp, 8);
+    singlesquare &= empty;
+
+    std::uint64_t twosquares = rank7 | bp;
+    twosquares = shiftIntRight(bp, 16);
+    twosquares &= empty;
+
+    return (singlesquare | twosquares);
+}
+
+
+std::uint64_t bPawnCaptures(std::uint64_t bp, std::uint64_t enemy);
+
+
+
 
 
 

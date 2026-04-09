@@ -8,6 +8,12 @@
 #include<array>
 
 
+// global constants
+inline constexpr std::uint64_t NOT_A_FILE = ~(0x0101010101010101ULL);
+inline constexpr std::uint64_t NOT_H_FILE = ~(0x8080808080808080ULL);
+
+
+
 // enum for piece type and colour
 enum pieceTypes {
     W_PAWN = 0,
@@ -43,6 +49,9 @@ struct Bitboard {
 
 
     // static factory methods
+
+    /* ----------- DEPRECATED ------------- 
+
     static Bitboard wPawnBitboard(){
         Bitboard b;
         int rank = 1;
@@ -54,6 +63,8 @@ struct Bitboard {
 
         return b;
     }
+
+    --------------------------------------- */ 
 
 
     // conversion operator => non-zero board is true, else false
@@ -177,6 +188,8 @@ struct Bitboard {
 
 };
 
+std::uint64_t shiftIntLeft(std::uint64_t board, int amount);
+std::uint64_t shiftIntRight(std::uint64_t board, int amount);
 
 void displayBoard(std::uint64_t board);
 std::uint64_t rankMask(int rank);
@@ -185,6 +198,19 @@ std::uint64_t diagonalMask(int rank, int file);
 std::uint64_t antidiagMask(int rank, int file);
 
 
+std::uint64_t shiftNorth(std::uint64_t board);
+std::uint64_t shiftSouth(std::uint64_t board);
+std::uint64_t shiftWest(std::uint64_t board);
+std::uint64_t shiftEast(std::uint64_t board);
+std::uint64_t shiftNW(std::uint64_t board);
+std::uint64_t shiftNE(std::uint64_t board);
+std::uint64_t shiftSW(std::uint64_t board);
+std::uint64_t shiftSE(std::uint64_t board);
 
+
+std::uint64_t wPawnPushes(std::uint64_t wp, std::uint64_t empty);
+std::uint64_t wPawnCaptures(std::uint64_t wp, std::uint64_t enemy);
+std::uint64_t bPawnPushes(std::uint64_t bp, std::uint64_t empty);
+std::uint64_t bPawnCaptures(std::uint64_t bp, std::uint64_t enemy);
 
 #endif
