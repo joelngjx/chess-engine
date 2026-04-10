@@ -193,7 +193,11 @@ std::uint64_t wPawnPushes(std::uint64_t wp, std::uint64_t empty){
 }
 
 
-std::uint64_t wPawnCaptures(std::uint64_t wp, std::uint64_t enemy);
+std::uint64_t wPawnCaptures(std::uint64_t wp, std::uint64_t enemy){
+    std::uint64_t captureDirections = shiftNW(wp) | shiftNE(wp);
+    std::uint64_t captures = captureDirections & enemy;
+    return captures;
+}
 
 
 std::uint64_t bPawnPushes(std::uint64_t bp, std::uint64_t empty){
@@ -209,7 +213,11 @@ std::uint64_t bPawnPushes(std::uint64_t bp, std::uint64_t empty){
 }
 
 
-std::uint64_t bPawnCaptures(std::uint64_t bp, std::uint64_t enemy);
+std::uint64_t bPawnCaptures(std::uint64_t bp, std::uint64_t enemy){
+    std::uint64_t captureDirections = shiftSW(bp) | shiftSE(bp);
+    std::uint64_t captures = captureDirections & enemy;
+    return captures;
+}
 
 
 

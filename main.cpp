@@ -76,7 +76,16 @@ int main(){
     std::uint64_t bpMoves = bPawnPushes(bp.board, empty.board);
     displayBoard(bpMoves);
 
+    /* custom test
+    std::uint64_t wpCaptures = wPawnCaptures(0x00810000000000ULL, blacks.board);
+    displayBoard(wpCaptures);
+    */
 
+    std::uint64_t wpCaptures = wPawnCaptures(wp.board, blacks.board);
+    displayBoard(wpCaptures);
+
+    std::uint64_t bpCaptures = bPawnCaptures(bp.board, whites.board);
+    displayBoard(bpCaptures);
 
     return 0;
 }
