@@ -1,6 +1,9 @@
 #include "Board.h"
 
 int main(){
+    // INITIALISING GLOBAL CONSTANTS
+    initKnightAttacks();
+
     /*
 
     // test 1: bit methods
@@ -69,6 +72,8 @@ int main(){
     /* PIECE TYPE BITBOARDS */
     Bitboard wp = allBoards.boards[W_PAWN];
     Bitboard bp = allBoards.boards[B_PAWN];  
+    Bitboard wn = allBoards.boards[W_KNIGHT];
+    Bitboard bn = allBoards.boards[B_KNIGHT];
 
     std::uint64_t wpMoves = wPawnPushes(wp.board, empty.board);
     displayBoard(wpMoves);
@@ -86,6 +91,13 @@ int main(){
 
     std::uint64_t bpCaptures = bPawnCaptures(bp.board, whites.board);
     displayBoard(bpCaptures);
+
+    std::uint64_t wnAttacks = knightAttacks(wn.board, blacks.board, empty.board);
+    displayBoard(wnAttacks);
+
+    std::uint64_t bnAttacks = knightAttacks(bn.board, whites.board, empty.board);
+    displayBoard(bnAttacks);
+
 
     return 0;
 }

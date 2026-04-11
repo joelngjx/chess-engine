@@ -11,6 +11,8 @@
 // global constants
 inline constexpr std::uint64_t NOT_A_FILE = ~(0x0101010101010101ULL);
 inline constexpr std::uint64_t NOT_H_FILE = ~(0x8080808080808080ULL);
+inline constexpr std::uint64_t NOT_B_FILE = ~(0x0202020202020202ULL);
+inline constexpr std::uint64_t NOT_G_FILE = ~(0x4040404040404040ULL);
 
 
 
@@ -192,6 +194,7 @@ std::uint64_t shiftIntLeft(std::uint64_t board, int amount);
 std::uint64_t shiftIntRight(std::uint64_t board, int amount);
 
 void displayBoard(std::uint64_t board);
+int popLSB(std::uint64_t board);
 std::uint64_t rankMask(int rank);
 std::uint64_t fileMask(int file);
 std::uint64_t diagonalMask(int rank, int file);
@@ -208,9 +211,16 @@ std::uint64_t shiftSW(std::uint64_t board);
 std::uint64_t shiftSE(std::uint64_t board);
 
 
+// PAWN MOVES
 std::uint64_t wPawnPushes(std::uint64_t wp, std::uint64_t empty);
 std::uint64_t wPawnCaptures(std::uint64_t wp, std::uint64_t enemy);
 std::uint64_t bPawnPushes(std::uint64_t bp, std::uint64_t empty);
 std::uint64_t bPawnCaptures(std::uint64_t bp, std::uint64_t enemy);
+
+
+// KNIGHT MOVES
+extern std::array<std::uint64_t, 64> knightAttackTables;
+void initKnightAttacks();
+std::uint64_t knightAttacks(std::uint64_t knights, std::uint64_t enemy, std::uint64_t empty);
 
 #endif

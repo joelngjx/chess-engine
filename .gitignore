@@ -10,3 +10,4 @@ piecemove.cpp
 piecemove.exe
 bitboards.cpp
 bitboards.exe
+knightLookupTables.txt

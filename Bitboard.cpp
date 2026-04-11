@@ -1,5 +1,5 @@
 #include "Bitboard.h"
-
+std::array<std::uint64_t, 64> knightAttackTables;  // definition
 
 // TODO: ISSUE OPERATOR OVERLOADING FOR << AND >> NOT DONE. WRITE CUSTOM FUNCTION TO SHIFT STD::UINT64_T TYPES
 
@@ -78,6 +78,20 @@ void displayBoard(std::uint64_t board){
 
     std::cout << "    a b c d e f g h" << std::endl;
     std::cout << "\n" << std::endl;
+}
+
+
+int popLSB(std::uint64_t *board){
+    if (*board != 0){
+        for (int i = 0; i < 64; i++){
+            if ((*board & (1ULL << i)) != 0){
+                *board ^= (1ULL << i);
+                return i;
+            }
+        }
+    }
+
+    return -1;   // error code to signal no bit found
 }
 
 
@@ -221,7 +235,37 @@ std::uint64_t bPawnCaptures(std::uint64_t bp, std::uint64_t enemy){
 
 
 
+// KNIGHT MOVES
+void initKnightAttacks(){
+    for (int sq = 0; sq < 64; sq++){
+        std::uint64_t knightMoves = (1ULL << sq);
+        std::uint64_t NNW = ((knightMoves & NOT_A_FILE) << 15);
+        std::uint64_t NNE = ((knightMoves & NOT_H_FILE) << 17);
+        std::uint64_t NWW = ((knightMoves & (NOT_A_FILE | NOT_B_FILE)) << 10);
+        std::uint64_t NEE = ((knightMoves & (NOT_G_FILE | NOT_H_FILE)) << 6);
+        std::uint64_t SSW = ((knightMoves & NOT_A_FILE) >> 17);
+        std::uint64_t SSE = ((knightMoves & NOT_H_FILE) >> 15);
+        std::uint64_t SWW = ((knightMoves & (NOT_A_FILE | NOT_B_FILE)) >> 10);
+        std::uint64_t SEE = ((knightMoves & (NOT_G_FILE | NOT_H_FILE)) >> 6);
 
+        knightMoves = (NNW | NNE | NWW | NEE | SSW | SSE | SWW | SEE);
+        knightAttackTables[sq] = knightMoves;
+    }
+}
+
+
+std::uint64_t knightAttacks(std::uint64_t knights, std::uint64_t enemy, std::uint64_t empty){
+    std::uint64_t temp = knights;
+    std::uint64_t knightMoves = 0ULL;
+
+    while (temp != 0ULL){
+        int current = popLSB(&temp);
+        knightMoves |= knightAttackTables[current];
+        knightMoves = (knightMoves & (empty | enemy));
+    }
+
+    return knightMoves;
+}
 
 
 /* 
