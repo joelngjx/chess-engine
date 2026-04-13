@@ -1,5 +1,6 @@
 #include "Bitboard.h"
 std::array<std::uint64_t, 64> knightAttackTables;  // definition
+std::array<std::uint64_t, 64> kingAttackTables; 
 
 // TODO: ISSUE OPERATOR OVERLOADING FOR << AND >> NOT DONE. WRITE CUSTOM FUNCTION TO SHIFT STD::UINT64_T TYPES
 
@@ -265,6 +266,40 @@ std::uint64_t knightAttacks(std::uint64_t knights, std::uint64_t enemy, std::uin
     }
 
     return knightMoves;
+}
+
+
+// KING MOVES
+void initKingAttacks(){
+    for (int sq = 0; sq < 64; sq++){
+        std::uint64_t kingMoves = (1ULL << sq);
+        std::uint64_t N = (kingMoves << 8);
+        std::uint64_t S = (kingMoves >> 8);
+        std::uint64_t E = ((kingMoves & NOT_H_FILE) << 1);
+        std::uint64_t W = ((kingMoves & NOT_A_FILE) >> 1);
+
+        std::uint64_t SW = ((kingMoves & NOT_A_FILE) >> 9);
+        std::uint64_t SE = ((kingMoves & NOT_H_FILE) >> 7);
+        std::uint64_t NW = ((kingMoves & NOT_A_FILE) << 7);
+        std::uint64_t NE = ((kingMoves & NOT_H_FILE) << 9);
+
+        kingMoves = (N | S | E | W | NW | NE | SW | SE);
+        kingAttackTables[sq] = kingMoves;
+    }
+}
+
+
+std::uint64_t kingAttacks(std::uint64_t king, std::uint64_t enemy, std::uint64_t empty){
+    std::uint64_t temp = king;
+    std::uint64_t kingMoves = 0ULL;
+
+    while (temp != 0ULL){
+        int current = popLSB(&temp);
+        kingMoves |= kingAttackTables[current];
+        kingMoves = (kingMoves & (empty | enemy));
+    }
+
+    return kingMoves;
 }
 
 

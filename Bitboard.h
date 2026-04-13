@@ -222,5 +222,8 @@ std::uint64_t bPawnCaptures(std::uint64_t bp, std::uint64_t enemy);
 extern std::array<std::uint64_t, 64> knightAttackTables;
 void initKnightAttacks();
 std::uint64_t knightAttacks(std::uint64_t knights, std::uint64_t enemy, std::uint64_t empty);
+void initKingAttacks();
+std::uint64_t kingAttacks(std::uint64_t king, std::uint64_t enemy, std::uint64_t empty);
+
 
 #endif
