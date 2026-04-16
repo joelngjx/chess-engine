@@ -23,6 +23,63 @@ Board Board::startingPosition(){
 }
 
 
+Board Board::parseFEN(std::string fen){
+    Board b;
+    std::stringstream test(fen);
+    std::vector<std::string> ranks;
+    std::string rank;
+
+    while (std::getline(test, rank, '/')){
+        ranks.push_back(rank);
+    }
+
+    std::reverse(ranks.begin(), ranks.end());
+
+
+    // parsing piecetypes and digits
+    for (int rank = 0; rank < 8; rank++){
+        int file = 0;
+        std::string rankString = ranks[rank];
+        
+
+        for (char c: rankString){
+            if (std::isdigit(c)){
+                file += (c - '0');
+                continue;
+            } else {
+                int pieceType = -1;
+                switch(c){
+                // White Pieces
+                    case 'P': pieceType = W_PAWN; break; 
+                    case 'R': pieceType = W_ROOK; break; 
+                    case 'B': pieceType = W_BISHOP; break;
+                    case 'N': pieceType = W_KNIGHT; break;
+                    case 'Q': pieceType = W_QUEEN; break;
+                    case 'K': pieceType = W_KING; break;
+
+                    // Black Pieces
+                    case 'p': pieceType = B_PAWN; break;
+                    case 'r': pieceType = B_ROOK; break;
+                    case 'b': pieceType = B_BISHOP; break;
+                    case 'n': pieceType = B_KNIGHT; break;
+                    case 'q': pieceType = B_QUEEN; break;
+                    case 'k': pieceType = B_KING; break;
+                    
+                    default: break;
+                }
+
+                if (pieceType != -1){
+                    b.boards[pieceType] |= (1ULL << (8*rank+file));   
+                    file++;
+                }
+            }
+        }
+    }
+
+    return b;
+}
+
+
 Bitboard Board::whitePieces(){
     Bitboard temp;
     for (int white = W_PAWN; white <= W_KING; white++){
