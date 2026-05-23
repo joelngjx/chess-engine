@@ -4,6 +4,8 @@
 #include<vector>
 #include<sstream>
 #include<algorithm>
+#include<iomanip>
+#include <intrin.h>
 #include "Bitboard.h"
 
 
@@ -27,7 +29,12 @@ struct Board{
     Bitboard blackPieces();
     Bitboard occupiedSquares();
     Bitboard emptySquares();
+
+    uint64_t zobristHash;
+    bool isValid() const;
+    void printBoardState() const;
 };
 
+void printHex(std::uint64_t value);
 
 #endif

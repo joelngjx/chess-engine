@@ -1,7 +1,8 @@
-#include "Board.h"
+#include "Zobrist.h"
 
 int main(){
     // INITIALISING GLOBAL CONSTANTS
+    initZobrist();
     initKnightAttacks();
     initKingAttacks();
 
@@ -135,6 +136,15 @@ int main(){
     displayBoard(whiteMoves);
     displayBoard(blackMoves);
 
+
+    // FEN tests
+    std::string startingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    Board starting = Board::parseFEN(startingFEN);
+    starting.printBoardState();  // instance method
+
+    std::string testFEN = "r1bqkr2/ppppnp2/2n1p1p1/P3N3/1bP1P3/3P1P2/1PQ1K1pP/1RB2BNR w q - 3 16";
+    Board test = Board::parseFEN(testFEN);
+    test.printBoardState();
 
 
     return 0;

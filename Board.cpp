@@ -25,11 +25,25 @@ Board Board::startingPosition(){
 
 Board Board::parseFEN(std::string fen){
     Board b;
-    std::stringstream test(fen);
+    std::stringstream full(fen);
+    std::vector<std::string> fields;
+    std::string field;
+
     std::vector<std::string> ranks;
     std::string rank;
 
-    while (std::getline(test, rank, '/')){
+
+    // separation by fields
+    while (std::getline(full, field, ' ')){
+        fields.push_back(field);
+    }
+
+
+    std::stringstream r(fields[0]);
+    
+
+    // separation by ranks
+    while (std::getline(r, rank, '/')){
         ranks.push_back(rank);
     }
 
@@ -76,8 +90,151 @@ Board Board::parseFEN(std::string fen){
         }
     }
 
+    if (fields[1] == "w"){
+        b.whiteToMove = true;
+    } else {
+        b.whiteToMove = false;
+    }
+
+
+    b.castlingRights = 0ULL;
+    for (char c: fields[2]){
+        if (c == 'K') {b.castlingRights |= 1;} 
+        else if (c == 'Q') {b.castlingRights |= 2;}
+        else if (c == 'k') {b.castlingRights |= 4;}
+        else if (c == 'q') {b.castlingRights |= 8;}
+    }
+
+
+    std::string enPassant = fields[3];
+    if (enPassant == "-"){
+        b.enPassantSquare = -1;
+    } else {
+        int file = enPassant[0] - 'a';
+        int rank = enPassant[1] - '1';
+        int index = 8*rank + file;
+        b.enPassantSquare = index;
+    }
+
+
+    b.halfMoveClock = std::stoi(fields[4]);
+    b.fullMoveNumber = std::stoi(fields[5]);
+    
+
     return b;
 }
+
+
+bool Board::isValid() const {
+    // king count
+    if (__popcnt64(boards[W_KING].board) != 1) return false;
+    if (__popcnt64(boards[B_KING].board) != 1) return false;
+
+
+    // no pawns on ranks 1,8
+    const uint64_t ranks_1_8 = 0xFF000000000000FFULL;
+    if((boards[W_PAWN].board & ranks_1_8) != 0) return false;
+    if((boards[B_PAWN].board & ranks_1_8) != 0) return false;
+
+    // popcount bounds, overlap check, material limit
+    uint64_t seenMask = 0ULL;
+    int wpCount = 0;
+    int bpCount = 0;
+
+    for (int i = W_PAWN; i <= B_KING; i++){
+        uint64_t currentBoard = boards[i].board;
+        int currentCount = static_cast<int>(__popcnt64(currentBoard));
+
+        if ((seenMask & currentBoard) != 0){
+            return false;
+        }
+
+        seenMask |= currentBoard;
+
+        if (i <= W_KING){
+            wpCount++;
+        } else {
+            bpCount++;
+        }
+
+
+        // individual piece checks
+        if (i == W_PAWN || i == B_PAWN){
+            if (currentCount > 8) return false;
+        } else if (i == W_QUEEN || i == B_QUEEN){
+            if (currentCount > 9) return false;
+        } else if (i != W_KING || i != B_KING){
+            if (currentCount > 10) return false;
+        }
+
+        if (wpCount > 16 || bpCount > 16) return false;
+
+        return true;
+    }
+
+    return true;
+}
+
+
+void Board::printBoardState() const {
+    // printing hexes of all bitboards
+    // std::left => left justified
+    std::string piecenames[12] = {
+        "W_PAWN",
+        "W_ROOK",
+        "W_BISHOP",
+        "W_KNIGHT",
+        "W_QUEEN",
+        "W_KING",
+        "B_PAWN",
+        "B_ROOK",
+        "B_BISHOP",
+        "B_KNIGHT",
+        "B_QUEEN",
+        "B_KING"
+    };
+
+
+    std::cout << "--------- BOARD STATE ---------" << "\n";
+    for (int i = W_PAWN; i <= B_KING; i++){
+        std::cout << piecenames[i] << "\n";
+        displayBoard(boards[i].board);
+    }
+
+    
+    // side to move
+    std::cout << "\n" << "Side to move       : " << (whiteToMove ? "White" : "Black") << "\n";
+
+
+    // castling rights
+    std::cout << "Castling Rights     : ";
+    if (castlingRights == 0) std::cout << "-"; 
+    if (castlingRights & 1) std::cout << "K"; 
+    if (castlingRights & 2) std::cout << "Q"; 
+    if (castlingRights & 4) std::cout << "k"; 
+    if (castlingRights & 8) std::cout << "q";
+    std::cout << "\n";
+
+
+    // en passant
+    std::cout << "En Passant Square   : ";
+    if (enPassantSquare == -1){
+        std::cout << "None" << "\n";
+    } else {
+        char file = 'a' + (enPassantSquare % 8);
+        char rank = '1' + (enPassantSquare / 8);
+        std::cout << file << rank << "\n";
+    }
+
+
+    // half move clock, full move number, zobrist hash
+    std::cout << "Half-Move Clock     : " << halfMoveClock << "\n";
+    std::cout << "Full-Move Number    : " << fullMoveNumber << "\n";
+    
+    std::cout << "Zobrist Hash        : ";
+    printHex(zobristHash);
+}
+
 
 
 Bitboard Board::whitePieces(){
@@ -111,6 +268,10 @@ Bitboard Board::emptySquares(){
     return empty;
 }
 
+
+void printHex(std::uint64_t value){
+    std::cout << "0x" << std::setfill('0') << std::setw(16) << std::hex << value << std::dec << "\n";
+}
 
 
 /*

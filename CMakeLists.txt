@@ -8,4 +8,5 @@ add_executable(chess
     main.cpp
     Bitboard.cpp
     Board.cpp
+    Zobrist.cpp
 )
