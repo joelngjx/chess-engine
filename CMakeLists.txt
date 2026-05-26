@@ -9,4 +9,5 @@ add_executable(chess
     Bitboard.cpp
     Board.cpp
     Zobrist.cpp
+    Move.cpp
 )

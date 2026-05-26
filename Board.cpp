@@ -256,11 +256,13 @@ Bitboard Board::blackPieces(){
     return temp;
 };
 
+
 Bitboard Board::occupiedSquares(){
     Bitboard occupied;
     occupied.board = (whitePieces() | blackPieces()).board;
     return occupied;
 }
+
 
 Bitboard Board::emptySquares(){
     Bitboard empty;

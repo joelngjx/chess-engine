@@ -194,6 +194,7 @@ std::uint64_t shiftIntLeft(std::uint64_t board, int amount);
 std::uint64_t shiftIntRight(std::uint64_t board, int amount);
 
 void displayBoard(std::uint64_t board);
+std::uint64_t setBit(std::uint64_t board, int rank, int file);
 int popLSB(std::uint64_t board);
 std::uint64_t rankMask(int rank);
 std::uint64_t fileMask(int file);

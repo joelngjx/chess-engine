@@ -82,6 +82,13 @@ void displayBoard(std::uint64_t board){
 }
 
 
+std::uint64_t setBit(std::uint64_t board, int rank, int file){
+    int index = 8*rank + file;
+    std::uint64_t mask = 1ULL << index;
+    return board | mask;   
+}
+
+
 int popLSB(std::uint64_t *board){
     if (*board != 0){
         for (int i = 0; i < 64; i++){

@@ -1,4 +1,5 @@
 #include "Zobrist.h"
+#include "Move.h"
 
 int main(){
     // INITIALISING GLOBAL CONSTANTS
@@ -137,6 +138,7 @@ int main(){
     displayBoard(blackMoves);
 
 
+    /*
     // FEN tests
     std::string startingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     Board starting = Board::parseFEN(startingFEN);
@@ -145,7 +147,26 @@ int main(){
     std::string testFEN = "r1bqkr2/ppppnp2/2n1p1p1/P3N3/1bP1P3/3P1P2/1PQ1K1pP/1RB2BNR w q - 3 16";
     Board test = Board::parseFEN(testFEN);
     test.printBoardState();
+    */
 
+
+    std::uint64_t startingRookAttacks = rookAttacks(0, occupied.board, whites.board);
+    displayBoard(startingRookAttacks);
+
+
+    std::uint64_t testOwnPieces = 0ULL;
+    testOwnPieces = setBit(testOwnPieces, 3, 5);  // d6
+    testOwnPieces = setBit(testOwnPieces, 5, 3);  // f4
+    displayBoard(testOwnPieces);
+    std:uint64_t testOccupied = testOwnPieces;
+    testOccupied |= (1ULL << 11);
+    testOccupied |= (1ULL << 25);
+    std::uint64_t testRookAttacks = rookAttacks(27, testOccupied, testOwnPieces);
+    displayBoard(testRookAttacks);
+    std::uint64_t testBishopAttacks = bishopAttacks(36, testOccupied, testOwnPieces);
+    displayBoard(testBishopAttacks);
+    std::uint64_t testQueenAttacks = queenAttacks(36, testOccupied, testOwnPieces);
+    displayBoard(testQueenAttacks);
 
     return 0;
 }
