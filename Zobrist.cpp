@@ -50,3 +50,11 @@ std::uint64_t computeHash(const Board& b){
     return hash;
 
 }
+
+
+/*
+12 pieceTypes * 64 squares = 768
+enPassant for each of 8 files = 8
+4 castling types = 4
+side to move = 1
+*/

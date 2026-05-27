@@ -33,8 +33,10 @@ struct Board{
     uint64_t zobristHash;
     bool isValid() const;
     void printBoardState() const;
+
 };
 
 void printHex(std::uint64_t value);
+
 
 #endif

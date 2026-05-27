@@ -3,17 +3,19 @@
 #include<vector>
 #include<cstdint>
 #include "Bitboard.h"
+#include "Board.h"
 
 
 // FLAG CONSTANTS
-constexpr std::uint8_t FLAG_CAPTURE     = 0b00000001;
-constexpr std::uint8_t FLAG_DOUBLE_PUSH = 0b00000010;
-constexpr std::uint8_t FLAG_EN_PASSANT  = 0b00000100;
-constexpr std::uint8_t FLAG_CASTLING    = 0b00001000;
-constexpr std::uint8_t PROMO_QUEEN      = 0b00010000;
-constexpr std::uint8_t PROMO_ROOK       = 0b00100000;
-constexpr std::uint8_t PROMO_BISHOP     = 0b00110000;
-constexpr std::uint8_t PROMO_KNIGHT     = 0b01000000;
+constexpr std::uint8_t FLAG_CAPTURE       = 0b00000001;
+constexpr std::uint8_t FLAG_DOUBLE_PUSH   = 0b00000010;
+constexpr std::uint8_t FLAG_EN_PASSANT    = 0b00000100;
+constexpr std::uint8_t FLAG_CASTLE_KSIDE  = 0b00001000;
+constexpr std::uint8_t FLAG_CASTLE_QSIDE  = 0b00010000;
+constexpr std::uint8_t PROMO_QUEEN        = 0b00100000;
+constexpr std::uint8_t PROMO_ROOK         = 0b01000000;
+constexpr std::uint8_t PROMO_BISHOP       = 0b01100000;
+constexpr std::uint8_t PROMO_KNIGHT       = 0b10000000;
 
 
 // structure to think about this:
@@ -34,6 +36,8 @@ void addMove(MoveList& list, Move m);
 uint64_t rookAttacks(int square, std::uint64_t occupied, std::uint64_t ownPieces);
 uint64_t bishopAttacks(int square, std::uint64_t occupied, std::uint64_t ownPieces);
 uint64_t queenAttacks(int square, std::uint64_t occupied, std::uint64_t ownPieces);
+
+Board makeMove(const Board& b, Move m);
 
 
 #endif
