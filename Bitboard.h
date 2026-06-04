@@ -195,7 +195,7 @@ std::uint64_t shiftIntRight(std::uint64_t board, int amount);
 
 void displayBoard(std::uint64_t board);
 std::uint64_t setBit(std::uint64_t board, int rank, int file);
-int popLSB(std::uint64_t board);
+int popLSB(std::uint64_t *board);
 std::uint64_t rankMask(int rank);
 std::uint64_t fileMask(int file);
 std::uint64_t diagonalMask(int rank, int file);
@@ -223,6 +223,10 @@ std::uint64_t bPawnCaptures(std::uint64_t bp, std::uint64_t enemy);
 extern std::array<std::uint64_t, 64> knightAttackTables;
 void initKnightAttacks();
 std::uint64_t knightAttacks(std::uint64_t knights, std::uint64_t enemy, std::uint64_t empty);
+
+
+// KING MOVES
+extern std::array<std::uint64_t, 64> kingAttackTables;
 void initKingAttacks();
 std::uint64_t kingAttacks(std::uint64_t king, std::uint64_t enemy, std::uint64_t empty);
 

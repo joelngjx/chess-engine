@@ -207,10 +207,7 @@ std::uint64_t wPawnPushes(std::uint64_t wp, std::uint64_t empty){
     std::uint64_t singlesquare = shiftIntLeft(wp, 8);
     singlesquare &= empty;
 
-    std::uint64_t twosquares = rank2 | wp;
-    twosquares = shiftIntLeft(wp, 16);
-    twosquares &= empty;
-
+    std::uint64_t twosquares = shiftIntLeft((singlesquare & rank2) & empty, 8);
     return (singlesquare | twosquares);
 }
 
@@ -227,10 +224,7 @@ std::uint64_t bPawnPushes(std::uint64_t bp, std::uint64_t empty){
     std::uint64_t singlesquare = shiftIntRight(bp, 8);
     singlesquare &= empty;
 
-    std::uint64_t twosquares = rank7 | bp;
-    twosquares = shiftIntRight(bp, 16);
-    twosquares &= empty;
-
+    std::uint64_t twosquares = shiftIntRight((singlesquare & rank7) & empty, 8);
     return (singlesquare | twosquares);
 }
 
@@ -249,12 +243,12 @@ void initKnightAttacks(){
         std::uint64_t knightMoves = (1ULL << sq);
         std::uint64_t NNW = ((knightMoves & NOT_A_FILE) << 15);
         std::uint64_t NNE = ((knightMoves & NOT_H_FILE) << 17);
-        std::uint64_t NWW = ((knightMoves & (NOT_A_FILE | NOT_B_FILE)) << 10);
-        std::uint64_t NEE = ((knightMoves & (NOT_G_FILE | NOT_H_FILE)) << 6);
+        std::uint64_t NWW = ((knightMoves & NOT_A_FILE & NOT_B_FILE) << 6);
+        std::uint64_t NEE = ((knightMoves & NOT_G_FILE & NOT_H_FILE) << 10);
         std::uint64_t SSW = ((knightMoves & NOT_A_FILE) >> 17);
         std::uint64_t SSE = ((knightMoves & NOT_H_FILE) >> 15);
-        std::uint64_t SWW = ((knightMoves & (NOT_A_FILE | NOT_B_FILE)) >> 10);
-        std::uint64_t SEE = ((knightMoves & (NOT_G_FILE | NOT_H_FILE)) >> 6);
+        std::uint64_t SWW = ((knightMoves & NOT_A_FILE & NOT_B_FILE) >> 10);
+        std::uint64_t SEE = ((knightMoves & NOT_G_FILE & NOT_H_FILE) >> 6);
 
         knightMoves = (NNW | NNE | NWW | NEE | SSW | SSE | SWW | SEE);
         knightAttackTables[sq] = knightMoves;

@@ -29,6 +29,7 @@ struct Move{
 };
 
 using MoveList = std::vector<Move>;
+void addMoveIfLegal(const Board& b, MoveList& list, Move m, bool whiteTurn);
 void addMove(MoveList& list, Move m);
 
 
@@ -38,6 +39,8 @@ uint64_t bishopAttacks(int square, std::uint64_t occupied, std::uint64_t ownPiec
 uint64_t queenAttacks(int square, std::uint64_t occupied, std::uint64_t ownPieces);
 
 Board makeMove(const Board& b, Move m);
-
+bool isInCheck(const Board& b, bool whiteKingInCheck);
+MoveList generateLegalMoves(const Board& b);
+std::uint64_t perft(int depth, const Board& b);
 
 #endif

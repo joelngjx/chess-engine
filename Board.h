@@ -13,11 +13,11 @@
 struct Board{
     // member data
     std::array<Bitboard, 12> boards;
-    bool whiteToMove;
-    uint8_t castlingRights;
-    int enPassantSquare;
-    int halfMoveClock;
-    int fullMoveNumber;
+    bool whiteToMove = true;
+    uint8_t castlingRights = 0b1111;
+    int enPassantSquare = -1;
+    int halfMoveClock = 0;
+    int fullMoveNumber = 1;
 
     // constructor (empty cuz we already initialise with value 0ULL for default Bitboard)
     Board();

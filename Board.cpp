@@ -19,6 +19,13 @@ Board Board::startingPosition(){
     b.boards[B_KNIGHT] = 0x4200000000000000ULL;
     b.boards[B_QUEEN] = 0x0800000000000000ULL;
     b.boards[B_KING] = 0x1000000000000000ULL;
+
+    b.whiteToMove = true;
+    b.castlingRights = 0b1111;
+    b.enPassantSquare = -1;
+    b.halfMoveClock = 0;
+    b.fullMoveNumber = 1;
+    
     return b;
 }
 
@@ -168,8 +175,6 @@ bool Board::isValid() const {
         }
 
         if (wpCount > 16 || bpCount > 16) return false;
-
-        return true;
     }
 
     return true;

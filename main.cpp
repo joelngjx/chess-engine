@@ -1,7 +1,10 @@
 #include "Zobrist.h"
 #include "Move.h"
+#include <chrono>
 
 int main(){
+    std::cout << std::unitbuf;
+
     // INITIALISING GLOBAL CONSTANTS
     initZobrist();
     initKnightAttacks();
@@ -9,33 +12,33 @@ int main(){
 
     /*
 
-    // test 1: bit methods
-    Bitboard bb;
-    bb.setBit(2,2);
-    bb.clearBit(2,2);
-    if (bb.checkBit(2,2)){
-        std::cout << "c3 is not empty" << std::endl;
-    } else {
-        std::cout << "c3 is empty" << std::endl;
-    }
+        // test 1: bit methods
+        Bitboard bb;
+        bb.setBit(2,2);
+        bb.clearBit(2,2);
+        if (bb.checkBit(2,2)){
+            std::cout << "c3 is not empty" << std::endl;
+        } else {
+            std::cout << "c3 is empty" << std::endl;
+        }
 
 
-    // test 2: initialising starting positions -- DEPRECATED FUNCTION
-    Bitboard wp = Bitboard::wPawnBitboard();
-    displayBoard(wp.board);
+        // test 2: initialising starting positions -- DEPRECATED FUNCTION
+        Bitboard wp = Bitboard::wPawnBitboard();
+        displayBoard(wp.board);
 
 
-    // test 3: using operators
-    Bitboard boardA;
-    boardA.setBit(0,1);
-    boardA.setBit(0,6);
+        // test 3: using operators
+        Bitboard boardA;
+        boardA.setBit(0,1);
+        boardA.setBit(0,6);
 
-    Bitboard boardB;
-    boardB.setBit(2,2);
-    boardB.setBit(2,5);
+        Bitboard boardB;
+        boardB.setBit(2,2);
+        boardB.setBit(2,5);
 
-    Bitboard boardC = boardA | boardB;
-    displayBoard(boardC.board);
+        Bitboard boardC = boardA | boardB;
+        displayBoard(boardC.board);
 
     */
 
@@ -43,10 +46,10 @@ int main(){
     Board allBoards = Board::startingPosition();
   
     /* display all baords
-    std::cout << "Starting Positions: " << std::endl;
-    for (int z = W_PAWN; z <= B_KING; z++){
-        displayBoard(allBoards.boards[z].board);
-    } 
+        std::cout << "Starting Positions: " << std::endl;
+        for (int z = W_PAWN; z <= B_KING; z++){
+            displayBoard(allBoards.boards[z].board);
+        } 
     */
 
 
@@ -55,11 +58,12 @@ int main(){
     Bitboard occupied = allBoards.occupiedSquares();
     Bitboard empty = allBoards.emptySquares();
 
-
+    /*
     displayBoard(whites.board);
     displayBoard(blacks.board);
     displayBoard(occupied.board);
     displayBoard(empty.board);
+    */
 
 
 
@@ -71,9 +75,9 @@ int main(){
     shiftTest.setBit(7,0);
     shiftTest.setBit(7,7);
 
-    displayBoard(shiftTest.board);
+    // displayBoard(shiftTest.board);
     std::uint64_t shiftedNorthEast = shiftNE(shiftTest.board);
-    displayBoard(shiftedNorthEast);
+    // displayBoard(shiftedNorthEast);
 
 
 
@@ -86,31 +90,31 @@ int main(){
     Bitboard bk = allBoards.boards[B_KING];
 
 
-    std::cout << "Pawn Moves: " << std::endl;
+    // std::cout << "Pawn Moves: " << std::endl;
     std::uint64_t wpMoves = wPawnPushes(wp.board, empty.board);
-    displayBoard(wpMoves);
+    // displayBoard(wpMoves);
 
     std::uint64_t bpMoves = bPawnPushes(bp.board, empty.board);
-    displayBoard(bpMoves);
+    // displayBoard(bpMoves);
 
     /* custom test
     std::uint64_t wpCaptures = wPawnCaptures(0x00810000000000ULL, blacks.board);
-    displayBoard(wpCaptures);
+    // displayBoard(wpCaptures);
     */
 
-    std::cout << "Pawn Captures: " << std::endl;
+    // std::cout << "Pawn Captures: " << std::endl;
     std::uint64_t wpCaptures = wPawnCaptures(wp.board, blacks.board);
-    displayBoard(wpCaptures);
+    // displayBoard(wpCaptures);
 
     std::uint64_t bpCaptures = bPawnCaptures(bp.board, whites.board);
-    displayBoard(bpCaptures);
+    // displayBoard(bpCaptures);
 
-    std::cout << "Knight Moves: " << std::endl;
+    // std::cout << "Knight Moves: " << std::endl;
     std::uint64_t wnAttacks = knightAttacks(wn.board, blacks.board, empty.board);
-    displayBoard(wnAttacks);
+    // displayBoard(wnAttacks);
 
     std::uint64_t bnAttacks = knightAttacks(bn.board, whites.board, empty.board);
-    displayBoard(bnAttacks);
+    // displayBoard(bnAttacks);
 
 
     /* custom tests
@@ -123,19 +127,19 @@ int main(){
     */
     
 
-    std::cout << "King Moves: " << std::endl;
+    // std::cout << "King Moves: " << std::endl;
     std::uint64_t wkAttacks = kingAttacks(wk.board, blacks.board, empty.board);
-    displayBoard(wkAttacks);
+    // displayBoard(wkAttacks);
 
     std::uint64_t bkAttacks = kingAttacks(bk.board, whites.board, empty.board);
-    displayBoard(bkAttacks);
+    // displayBoard(bkAttacks);
 
 
-    std::cout << "All available moves for a given colour: " << std::endl;
+    // std::cout << "All available moves for a given colour: " << std::endl;
     std::uint64_t whiteMoves = (wpMoves | wpCaptures | wnAttacks | wkAttacks);
     std::uint64_t blackMoves = (bpMoves | bpCaptures | bnAttacks | bkAttacks);
-    displayBoard(whiteMoves);
-    displayBoard(blackMoves);
+    // displayBoard(whiteMoves);
+    // displayBoard(blackMoves);
 
 
     /*
@@ -151,22 +155,50 @@ int main(){
 
 
     std::uint64_t startingRookAttacks = rookAttacks(0, occupied.board, whites.board);
-    displayBoard(startingRookAttacks);
+    // displayBoard(startingRookAttacks);
 
 
     std::uint64_t testOwnPieces = 0ULL;
     testOwnPieces = setBit(testOwnPieces, 3, 5);  // d6
     testOwnPieces = setBit(testOwnPieces, 5, 3);  // f4
-    displayBoard(testOwnPieces);
-    std:uint64_t testOccupied = testOwnPieces;
+    // displayBoard(testOwnPieces);
+    std::uint64_t testOccupied = testOwnPieces;
     testOccupied |= (1ULL << 11);
     testOccupied |= (1ULL << 25);
     std::uint64_t testRookAttacks = rookAttacks(27, testOccupied, testOwnPieces);
-    displayBoard(testRookAttacks);
+    // displayBoard(testRookAttacks);
     std::uint64_t testBishopAttacks = bishopAttacks(36, testOccupied, testOwnPieces);
-    displayBoard(testBishopAttacks);
+    // displayBoard(testBishopAttacks);
     std::uint64_t testQueenAttacks = queenAttacks(36, testOccupied, testOwnPieces);
-    displayBoard(testQueenAttacks);
+    // displayBoard(testQueenAttacks);
 
+
+
+    /*
+    MoveList testList = generateLegalMoves(allBoards);
+    for (Move m : generateLegalMoves(allBoards))
+    {
+        std::cout << m.fromSquare << " to " << m.toSquare << ": " << perft(1, makeMove(allBoards,m)) << "\n";
+    }*/
+
+
+    std::cout << "=============== PERFT RESULTS ==============\n";
+    for (int p = 0; p <= 6; p++){
+        auto start = std::chrono::high_resolution_clock::now();
+        std::uint64_t perftCount = perft(p, allBoards);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = end - start;
+        std::cout << "Nodes at depth " << p << ": " << perftCount << std::endl;
+        std::cout << "Execution time: " << elapsed.count() << " ms\n";
+    }
+
+    /*
+    MoveList list = generateLegalMoves(allBoards);
+    std::cout << "Engine generated " << list.size() << " moves: \n";
+    for(const auto& m : list) {
+        std::cout << "From: " << m.fromSquare << " To: " << m.toSquare << "\n";
+    }
+    */
+    
     return 0;
 }

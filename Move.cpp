@@ -1,5 +1,14 @@
 #include "Move.h"
 #include "Zobrist.h"
+#include<cassert>
+
+
+void addMoveIfLegal(const Board& b, MoveList& list, Move m, bool whiteTurn){
+    Board postMove = makeMove(b, m);
+    if (!isInCheck(postMove, whiteTurn)){
+        addMove(list, m);
+    }
+}
 
 
 void addMove(MoveList& list, Move m){
@@ -76,7 +85,7 @@ uint64_t rookAttacks(int square, std::uint64_t occupied, std::uint64_t ownPieces
             break;
         }
 
-        southRay = shiftEast(southRay);
+        southRay = shiftSouth(southRay);
         if (occupied & southRay){
             if(!(ownPieces & southRay)){
                 rayAttacks |= southRay;
@@ -202,37 +211,38 @@ Board makeMove(const Board& b, Move m){
     // updating bitboards
     Board original = b;
     int piece = m.pieceType;
-    bool capture = false;
+    bool capture = (m.flags & FLAG_CAPTURE);
     bool castleWK = false;
     bool castleWQ = false;
     bool castleBK = false;
     bool castleBQ = false;
+    bool promo = false;
     int enpassantfile = -1;
-    int side = 0;
 
 
+    bool whiteMoved = b.whiteToMove;
+    int side = whiteMoved ? 6 : 0;
 
     // side to move
-    if ((piece >= 0) && (piece <= 5)){
-        original.whiteToMove = false;  // for next move
-    } else {
-        original.whiteToMove = true;
-        side = 6;
-    }
-
-
-    // check for captures
-    if (m.flags & FLAG_CAPTURE){
-        capture = true;
-    }
+    original.whiteToMove = !whiteMoved;
 
 
     // check for double push
     if (m.flags & FLAG_DOUBLE_PUSH){
-        if (original.whiteToMove){
-            original.enPassantSquare = m.toSquare + 8;
+        if (whiteMoved){
+            std::uint64_t enemyPawnCapture = bPawnCaptures(original.boards[B_PAWN].board, (1ULL << (m.toSquare - 8)));
+            if (enemyPawnCapture != 0){
+                original.enPassantSquare = m.toSquare - 8;
+            } else {
+                original.enPassantSquare = -1;
+            }
         } else {
-            original.enPassantSquare = m.toSquare - 8;
+            std::uint64_t enemyPawnCapture = wPawnCaptures(original.boards[W_PAWN].board, (1ULL << (m.toSquare + 8)));
+            if (enemyPawnCapture != 0){
+                original.enPassantSquare = m.toSquare + 8;
+            } else {
+                original.enPassantSquare = -1;
+            }
         }
     } else {
         original.enPassantSquare = -1;
@@ -241,7 +251,7 @@ Board makeMove(const Board& b, Move m){
 
     // change in castling flags
     if (m.flags & FLAG_CASTLE_KSIDE){
-        if (!(original.whiteToMove)){  // white castled
+        if (whiteMoved){  // white castled
             original.castlingRights &= ~1;
             castleWK = true;
             original.zobristHash ^= zobristKeys[769];
@@ -251,7 +261,7 @@ Board makeMove(const Board& b, Move m){
             original.zobristHash ^= zobristKeys[771];
         }
     } else if (m.flags & FLAG_CASTLE_QSIDE){
-        if (!(original.whiteToMove)){
+        if (whiteMoved){
             original.castlingRights &=~ 2;
             castleWQ = true;
             original.zobristHash ^= zobristKeys[770];
@@ -261,6 +271,7 @@ Board makeMove(const Board& b, Move m){
             original.zobristHash ^= zobristKeys[772];
         }
     }
+
 
     if (m.pieceType == W_KING){
         original.castlingRights &= ~(1 | 2);
@@ -281,60 +292,23 @@ Board makeMove(const Board& b, Move m){
     }
 
 
+    if (m.flags & FLAG_CAPTURE){
+        switch(m.toSquare){
+            case 0: original.castlingRights &= ~2; break;
+            case 7: original.castlingRights &= ~1; break;
+            case 56: original.castlingRights &= ~8; break;
+            case 63: original.castlingRights &= ~4; break;
+            default: break;
+        }
+    }
+
+
     // checking for en passant
     // file = index modulo 8
     if (m.flags & FLAG_EN_PASSANT){
         enpassantfile = m.toSquare % 8;
         capture = true;
         original.zobristHash ^= zobristKeys[773 + enpassantfile];
-    }
-
-
-    if (m.flags & PROMO_QUEEN){
-        original.boards[piece] ^= (1ULL << m.fromSquare);
-        original.zobristHash ^= zobristKeys[piece * 64 + m.fromSquare];
-        if (original.whiteToMove){
-            original.boards[B_QUEEN] |= (1ULL << m.toSquare);
-            original.zobristHash ^= zobristKeys[B_QUEEN * 64 + m.fromSquare];
-        } else {
-            original.boards[W_QUEEN] |= (1ULL << m.toSquare);
-            original.zobristHash ^= zobristKeys[W_QUEEN * 64 + m.fromSquare];
-        }
-    } else if (m.flags & PROMO_BISHOP){
-        original.boards[piece] ^= (1ULL << m.fromSquare);
-        original.zobristHash ^= zobristKeys[piece * 64 + m.fromSquare];
-        if (original.whiteToMove){
-            original.boards[B_BISHOP] |= (1ULL << m.toSquare);
-            original.zobristHash ^= zobristKeys[B_BISHOP * 64 + m.fromSquare];
-        } else {
-            original.boards[W_BISHOP] |= (1ULL << m.toSquare);
-            original.zobristHash ^= zobristKeys[W_BISHOP * 64 + m.fromSquare];
-        }
-    } else if (m.flags & PROMO_KNIGHT){
-        original.boards[piece] ^= (1ULL << m.fromSquare);
-        original.zobristHash ^= zobristKeys[piece * 64 + m.fromSquare];
-        if (original.whiteToMove){
-            original.boards[B_KNIGHT] |= (1ULL << m.toSquare);
-            original.zobristHash ^= zobristKeys[B_KNIGHT * 64 + m.fromSquare];
-        } else {
-            original.boards[W_KNIGHT] |= (1ULL << m.toSquare);
-            original.zobristHash ^= zobristKeys[W_KNIGHT * 64 + m.fromSquare];
-        }
-    } else if (m.flags & PROMO_ROOK){
-        original.boards[piece] ^= (1ULL << m.fromSquare);
-        original.zobristHash ^= zobristKeys[piece * 64 + m.fromSquare];
-        if (original.whiteToMove){
-            original.boards[B_ROOK] |= (1ULL << m.toSquare);
-            original.zobristHash ^= zobristKeys[B_ROOK * 64 + m.fromSquare];
-        } else {
-            original.boards[W_ROOK] |= (1ULL << m.toSquare);
-            original.zobristHash ^= zobristKeys[W_ROOK* 64 + m.fromSquare];
-        }
-    } else {
-        original.boards[piece] |= (1ULL << m.toSquare);
-        original.zobristHash ^= zobristKeys[piece * 64 + m.toSquare];
-        original.boards[piece] ^= (1ULL << m.fromSquare);
-        original.zobristHash ^= zobristKeys[piece * 64 + m.fromSquare];
     }
 
 
@@ -346,6 +320,52 @@ Board makeMove(const Board& b, Move m){
                 break;
             }
         }
+    }
+
+    original.boards[piece] ^= (1ULL << m.fromSquare);
+    original.zobristHash ^= zobristKeys[piece * 64 + m.fromSquare];
+    uint8_t promoType = m.flags & 0b11100000;
+    if (promoType != 0){
+        if (promoType == PROMO_QUEEN){
+            if (!(whiteMoved)){
+                original.boards[B_QUEEN] |= (1ULL << m.toSquare);
+                original.zobristHash ^= zobristKeys[B_QUEEN * 64 + m.toSquare];
+            } else {
+                original.boards[W_QUEEN] |= (1ULL << m.toSquare);
+                original.zobristHash ^= zobristKeys[W_QUEEN * 64 + m.toSquare];
+            }
+            promo = true;
+        } else if (promoType == PROMO_BISHOP){
+            if (!(whiteMoved)){
+                original.boards[B_BISHOP] |= (1ULL << m.toSquare);
+                original.zobristHash ^= zobristKeys[B_BISHOP * 64 + m.toSquare];
+            } else {
+                original.boards[W_BISHOP] |= (1ULL << m.toSquare);
+                original.zobristHash ^= zobristKeys[W_BISHOP * 64 + m.toSquare];
+            }
+            promo = true;
+        } else if (promoType == PROMO_KNIGHT){
+            if (!(whiteMoved)){
+                original.boards[B_KNIGHT] |= (1ULL << m.toSquare);
+                original.zobristHash ^= zobristKeys[B_KNIGHT * 64 + m.toSquare];
+            } else {
+                original.boards[W_KNIGHT] |= (1ULL << m.toSquare);
+                original.zobristHash ^= zobristKeys[W_KNIGHT * 64 + m.toSquare];
+            }
+            promo = true;
+        } else if (promoType == PROMO_ROOK){
+            if (!(whiteMoved)){
+                original.boards[B_ROOK] |= (1ULL << m.toSquare);
+                original.zobristHash ^= zobristKeys[B_ROOK * 64 + m.toSquare];
+            } else {
+                original.boards[W_ROOK] |= (1ULL << m.toSquare);
+                original.zobristHash ^= zobristKeys[W_ROOK* 64 + m.toSquare];
+            }
+            promo = true;
+        } 
+    } else {
+        original.boards[piece] |= (1ULL << m.toSquare);
+        original.zobristHash ^= zobristKeys[piece * 64 + m.toSquare];
     }
 
 
@@ -377,12 +397,12 @@ Board makeMove(const Board& b, Move m){
     // piece removal for en passant
     if (enpassantfile != -1){
         int capturedSquare;
-        if (original.whiteToMove){  // white pawn captured en passant
-            capturedSquare = 8*3 + enpassantfile;
+        if (!whiteMoved){  // black captures white's pawn
+            capturedSquare = m.toSquare + 8;
             original.boards[W_PAWN] ^= (1ULL << capturedSquare);
             original.zobristHash ^= zobristKeys[W_PAWN * 64 + capturedSquare];
-        } else {                    // black pawn captured en passant
-            capturedSquare = 8*4 + enpassantfile;
+        } else {                    // white captures black's pawn
+            capturedSquare = m.toSquare - 8;
             original.boards[B_PAWN] ^= (1ULL << capturedSquare);
             original.zobristHash ^= zobristKeys[B_PAWN * 64 + capturedSquare];
         }
@@ -390,10 +410,10 @@ Board makeMove(const Board& b, Move m){
 
 
     // updating board state
-    if (((piece == 0) || (piece == 6)) || capture){
+    if (((piece == 0) || (piece == 6)) || capture || promo){
         original.halfMoveClock = 0;
     }
-    if (original.whiteToMove) original.fullMoveNumber++;
+    if (!whiteMoved) original.fullMoveNumber++;
 
 
     // updating Zobrist hash
@@ -402,10 +422,304 @@ Board makeMove(const Board& b, Move m){
 }
 
 
+bool isInCheck(const Board& b, bool whiteKingInCheck){
+    Board temp = b;
+    Bitboard occupied = temp.occupiedSquares();
+    std::uint64_t empty = ~(occupied.board);
+    Bitboard whites = temp.whitePieces();
+    Bitboard blacks = temp.blackPieces();
+
+    if (whiteKingInCheck){
+        std::uint64_t blackRooks = temp.boards[B_ROOK].board;
+        std::uint64_t blackBishops = temp.boards[B_BISHOP].board;
+        std::uint64_t blackQueens = temp.boards[B_QUEEN].board;
+        std::uint64_t blackKing = temp.boards[B_KING].board;
+        std::uint64_t bpCaptures = bPawnCaptures(temp.boards[B_PAWN].board, whites.board);
+        std::uint64_t bnCaptures = knightAttacks(temp.boards[B_KNIGHT].board, whites.board, empty);
+
+        std::uint64_t brCaptures = 0ULL;
+        while(blackRooks != 0){
+            int rookIndex = popLSB(&blackRooks);
+            brCaptures |= rookAttacks(rookIndex, occupied.board, blacks.board);
+        }
+
+        std::uint64_t bbCaptures = 0ULL;
+        while(blackBishops != 0){
+            int bishopIndex = popLSB(&blackBishops);
+            bbCaptures |= bishopAttacks(bishopIndex, occupied.board, blacks.board);
+        }
+
+        std::uint64_t bqCaptures = 0ULL;
+        while (blackQueens != 0){
+            int queenIndex = popLSB(&blackQueens);
+            bqCaptures |= queenAttacks(queenIndex, occupied.board, blacks.board);
+        }
+
+        std::uint64_t bkCaptures = 0ULL;
+        if (blackKing != 0){
+            int kingIndex = popLSB(&blackKing);
+            bkCaptures = kingAttackTables[kingIndex];
+        }
+
+        std::uint64_t blackCaptures = bpCaptures | brCaptures | bbCaptures | bqCaptures | bnCaptures | bkCaptures;
+        return (blackCaptures & temp.boards[W_KING].board) != 0;
+    } else {
+        std::uint64_t wpCaptures = wPawnCaptures(temp.boards[W_PAWN].board, blacks.board);
+        std::uint64_t wnCaptures = knightAttacks(temp.boards[W_KNIGHT].board, blacks.board, empty);
+        std::uint64_t whiteRooks = temp.boards[W_ROOK].board;
+        std::uint64_t whiteBishops = temp.boards[W_BISHOP].board;
+        std::uint64_t whiteQueens = temp.boards[W_QUEEN].board;
+        std::uint64_t whiteKing = temp.boards[W_KING].board;
+
+        std::uint64_t wrCaptures = 0ULL;
+        while(whiteRooks != 0){
+            int rookIndex = popLSB(&whiteRooks);
+            wrCaptures |= rookAttacks(rookIndex, occupied.board, whites.board);
+        }
+        
+        std::uint64_t wbCaptures = 0ULL;
+        while(whiteBishops != 0){
+            int bishopIndex = popLSB(&whiteBishops);
+            wbCaptures |= bishopAttacks(bishopIndex, occupied.board, whites.board);
+        }
+
+        std::uint64_t wqCaptures = 0ULL;
+        while (whiteQueens != 0){
+            int queenIndex = popLSB(&whiteQueens);
+            wqCaptures |= queenAttacks(queenIndex, occupied.board, whites.board);
+        }
+
+        std::uint64_t wkCaptures = 0ULL;
+        if (whiteKing != 0){
+            int kingIndex = popLSB(&whiteKing);
+            wkCaptures = kingAttackTables[kingIndex];
+        }
+
+
+        std::uint64_t whiteCaptures = wpCaptures | wrCaptures | wbCaptures | wqCaptures | wnCaptures | wkCaptures;
+        return (whiteCaptures & temp.boards[B_KING].board) != 0;
+    }
+}
+
+
+MoveList generateLegalMoves(const Board &b){
+    MoveList list = {};
+
+    // helper variables
+    bool whiteTurn = b.whiteToMove;
+    Board temp = b;
+    Bitboard occupied = temp.occupiedSquares();
+    std::uint64_t empty = ~(occupied.board);
+    Bitboard whites = temp.whitePieces();
+    Bitboard blacks = temp.blackPieces();
+
+
+    int sideOffset = whiteTurn ? 0 : 6;
+    std::uint64_t ownPieces = whiteTurn ? whites.board : blacks.board;
+    std::uint64_t enemyPieces = whiteTurn ? blacks.board : whites.board;
+
+    for (int p = 0; p <= 5; p++){
+        int pieceType = p + sideOffset;
+        std::uint64_t pieceBoard = temp.boards[pieceType].board;
+
+        while (pieceBoard != 0ULL){
+            int fromSquare = popLSB(&pieceBoard);
+            std::uint64_t singlePawnMask = (1ULL << fromSquare);
+            std::uint64_t attackBoard = 0ULL;
+
+
+            if (p == 0){    // pawn
+                std::uint64_t singlePushBoard = 0ULL;
+                std::uint64_t doublePushBoard = 0ULL;
+                std::uint64_t captureBoard = 0ULL;
+                const std::uint64_t rank4 = 0x00000000FF000000ULL;
+                const std::uint64_t rank5 = 0x000000FF00000000ULL;
+
+
+                if (whiteTurn){
+                    captureBoard = wPawnCaptures(singlePawnMask, enemyPieces);
+                    singlePushBoard = empty & shiftNorth(singlePawnMask);
+                    doublePushBoard = empty & shiftNorth(singlePushBoard) & rank4;
+
+                    if (b.enPassantSquare != -1) {
+                        std::uint64_t enpassantMask = (1ULL << b.enPassantSquare);
+                        captureBoard |= wPawnCaptures(singlePawnMask, enpassantMask);
+                    }
+                } else {
+                    captureBoard = bPawnCaptures(singlePawnMask, enemyPieces);
+                    singlePushBoard = empty & shiftSouth(singlePawnMask);
+                    doublePushBoard = empty & shiftSouth(singlePushBoard) & rank5;
+
+                    // Check for En Passant using your capture function rules
+                    if (b.enPassantSquare != -1) {
+                        std::uint64_t enpassantMask = (1ULL << b.enPassantSquare);
+                        captureBoard |= bPawnCaptures(singlePawnMask, enpassantMask);
+                    }
+                }
+
+
+                // processing into moves
+                while (singlePushBoard != 0ULL){
+                    int toSquare = popLSB(&singlePushBoard);
+                    int rank = toSquare / 8;
+                    if ((whiteTurn && rank == 7) || (!whiteTurn && rank == 0)){
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, PROMO_QUEEN}, whiteTurn);
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, PROMO_ROOK}, whiteTurn);
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, PROMO_BISHOP}, whiteTurn);
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, PROMO_KNIGHT}, whiteTurn);
+                    } else {
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, 0}, whiteTurn);
+                    }
+                }
+
+
+                while (doublePushBoard != 0ULL){
+                    int toSquare = popLSB(&doublePushBoard);
+                    addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, FLAG_DOUBLE_PUSH}, whiteTurn);
+                }
+
+
+                while (captureBoard != 0ULL){
+                    int toSquare = popLSB(&captureBoard);
+                    int rank = toSquare / 8;
+                    std::uint8_t moveFlag = FLAG_CAPTURE;
+
+                    if (toSquare == b.enPassantSquare){
+                        moveFlag = FLAG_EN_PASSANT;
+                    }
+
+                    if ((whiteTurn && rank == 7) || (!whiteTurn && rank == 0)){
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, (std::uint8_t)(moveFlag | PROMO_QUEEN)}, whiteTurn);
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, (std::uint8_t)(moveFlag | PROMO_ROOK)}, whiteTurn);
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, (std::uint8_t)(moveFlag | PROMO_BISHOP)}, whiteTurn);
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, (std::uint8_t)(moveFlag | PROMO_KNIGHT)}, whiteTurn);
+                    } else {
+                        addMoveIfLegal(b, list, Move{fromSquare, toSquare, pieceType, moveFlag}, whiteTurn);
+                    }
+                }
+                continue;
+            }
+
+            if (p == 3){    // knight
+                attackBoard = knightAttackTables[fromSquare] & (empty | enemyPieces);
+            }
+
+            else if (p == 5){    // king 
+                attackBoard = kingAttackTables[fromSquare] & (empty | enemyPieces);
+            }
+    
+            else if (p == 2){    // bishop
+                attackBoard = bishopAttacks(fromSquare, occupied.board, ownPieces);
+            }
+
+            else if (p == 1){    // rook
+                attackBoard = rookAttacks(fromSquare, occupied.board, ownPieces);
+            }
+
+            else if (p == 4){    // queen
+                attackBoard = queenAttacks(fromSquare, occupied.board, ownPieces);
+            }
+
+            while (attackBoard != 0ULL){
+                int toSquare = popLSB(&attackBoard);
+                std::uint8_t moveFlag = 0;
+
+                if ((1ULL << toSquare) & enemyPieces){
+                    moveFlag = FLAG_CAPTURE;
+                }
+
+                Move m{fromSquare, toSquare, pieceType, moveFlag};
+                Board postMoveBoard = makeMove(b, m);
+                if (!isInCheck(postMoveBoard, whiteTurn)){
+                    addMove(list, m);
+                }
+            }
+        }
+    }
+
+
+    // handling castling
+    if (whiteTurn){
+        if (b.castlingRights & 1){  // white kingside
+            std::uint64_t pathMask = (1ULL << 5) | (1ULL << 6);
+            if ((occupied.board & pathMask) == 0ULL){
+                if (!isInCheck(b, true)){
+                    Board movingBoard = b;
+                    movingBoard.boards[W_KING].board = (1ULL << 5);
+                    if (!isInCheck(movingBoard, true)){
+                        Move m{4, 6, W_KING, FLAG_CASTLE_KSIDE};
+                        addMoveIfLegal(b, list, m, true);
+                    }
+                }
+            }
+        }
+
+
+        if (b.castlingRights & 2){  // white queenside
+            std::uint64_t pathMask = (1ULL << 1) | (1ULL << 2) | (1ULL << 3);
+            if ((occupied.board & pathMask) == 0ULL){
+                if (!isInCheck(b, true)){
+                    Board movingBoard = b;
+                    movingBoard.boards[W_KING].board = (1ULL << 3);
+                    if (!isInCheck(movingBoard, true)){
+                        Move m{4, 2, W_KING, FLAG_CASTLE_QSIDE};
+                        addMoveIfLegal(b, list, m, true);
+                    }
+                }
+            }
+        }
+    } else {
+        if (b.castlingRights & 4){  // black kingside
+            std::uint64_t pathMask = (1ULL << 61) | (1ULL << 62);
+            if ((occupied.board & pathMask) == 0ULL){
+                if(!isInCheck(b, false)){
+                    Board movingBoard = b;
+                    movingBoard.boards[B_KING].board = (1ULL << 61);
+                    if (!isInCheck(movingBoard, false)){
+                        Move m{60, 62, B_KING, FLAG_CASTLE_KSIDE};
+                        addMoveIfLegal(b, list, m, false);
+                    }
+                }
+            }
+        }
+
+
+        if (b.castlingRights & 8){
+            std::uint64_t pathMask = (1ULL << 57) | (1ULL << 58) | (1ULL << 59);
+            if ((occupied.board & pathMask) == 0ULL){
+                if(!isInCheck(b, false)){
+                    Board movingBoard = b;
+                    movingBoard.boards[B_KING].board = (1ULL << 59);
+                    if (!isInCheck(movingBoard, false)){
+                        Move m{60, 58, B_KING, FLAG_CASTLE_QSIDE};
+                        addMoveIfLegal(b, list, m, false);
+                    }
+                }
+            }
+        }
+    }
+
+
+    return list;
+}
+
+
+std::uint64_t perft(int depth, const Board &b){
+    if (depth == 0) return 1ULL;
+
+    MoveList list = generateLegalMoves(b);
+    std::uint64_t nodes = 0;
+    for (const Move&m : list){
+        Board nextBoard = makeMove(b, m);
+        nodes += perft(depth - 1, nextBoard);
+    }
+
+    return nodes;
+}
+
+
 /*
 TODO
-1. hardcode rook moves depending on colour and castling type [DONE]
-2. change in board state for en passant [DONE]
-3. handle zobrist xor-ing
-4. handle king in check function
+1. logic for handling if squares are checked when king passes through when castling
+2. test perft (should return 1, 20, 400, 8902, 197281, 4865609)
 */
