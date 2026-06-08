@@ -18,7 +18,7 @@ struct Board{
     int enPassantSquare = -1;
     int halfMoveClock = 0;
     int fullMoveNumber = 1;
-
+    
     // constructor (empty cuz we already initialise with value 0ULL for default Bitboard)
     Board();
 

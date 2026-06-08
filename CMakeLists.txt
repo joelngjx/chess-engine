@@ -10,4 +10,6 @@ add_executable(chess
     Board.cpp
     Zobrist.cpp
     Move.cpp
+    Eval.cpp
+    Search.cpp
 )

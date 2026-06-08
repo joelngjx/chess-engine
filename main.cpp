@@ -1,5 +1,7 @@
 #include "Zobrist.h"
 #include "Move.h"
+#include "Eval.h"
+#include "Search.h"
 #include <chrono>
 
 int main(){
@@ -153,6 +155,10 @@ int main(){
     test.printBoardState();
     */
 
+   std::string whiteAdvantage = "rnb1kbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
+   Board whiteAdvantageBoard = Board::parseFEN(whiteAdvantage);
+
+
 
     std::uint64_t startingRookAttacks = rookAttacks(0, occupied.board, whites.board);
     // displayBoard(startingRookAttacks);
@@ -183,7 +189,7 @@ int main(){
 
 
     std::cout << "=============== PERFT RESULTS ==============\n";
-    for (int p = 0; p <= 6; p++){
+    for (int p = 0; p <= 4; p++){
         auto start = std::chrono::high_resolution_clock::now();
         std::uint64_t perftCount = perft(p, allBoards);
         auto end = std::chrono::high_resolution_clock::now();
@@ -200,5 +206,19 @@ int main(){
     }
     */
     
+
+
+    // evaluation
+    int positionEval = evaluate(allBoards);
+    std::cout << "Current position evaluation score: " << positionEval << "\n\n";
+
+
+    // minimax move search algo
+    int evalStartD4 = minimaxRoot(allBoards, 4, INT_MIN, INT_MAX, true);
+    std::cout << "Max eval at depth 4: " << evalStartD4 << "\n\n";
+
+    int evalWhiteAdvantage = minimaxRoot(whiteAdvantageBoard, 3, INT_MIN, INT_MAX, true);
+    std::cout << "Max eval at depth 3: " << evalWhiteAdvantage << std::endl;
+ 
     return 0;
 }
