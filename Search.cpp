@@ -1,41 +1,37 @@
 #include "Search.h"
 
 
-int minimaxRoot(Board& b, int depth, int alpha, int beta, bool maximisingSide){
-    std::vector<int> nodeCounts(depth + 1, 0);
-    int result = minimax(b, depth, depth, alpha, beta, maximisingSide, nodeCounts);
-    for (int i = 0; i <= depth; i++){
-        std::cout << "Depth " << i << ": " << nodeCounts[i] << " nodes" << std::endl;
-    }
-    return result;
-}
-
-
-int minimax(Board& b, int depth, int originalDepth, int alpha, int beta, bool maximisingSide, std::vector<int>& nodeCounts){
+searchResult minimax(Board& b, int depth, int originalDepth, int alpha, int beta, bool maximisingSide, std::vector<int>& nodeCounts){
     nodeCounts[originalDepth - depth]++;
-    if (depth == 0) return evaluate(b);
+    Move bestMove = Move::nullMove();
+    if (depth == 0) return {evaluate(b), bestMove};
 
     if (maximisingSide){
         int maxEval = INT_MIN;
         MoveList list = generateLegalMoves(b);
         if (list.empty()){
             if (isInCheck(b, true)){
-                return -100000 + (originalDepth - depth);
+                return {-100000 + (originalDepth - depth), Move::nullMove()};
             } else {
-                return 0;
+                return {0, Move::nullMove()};
             }
         }
 
+        moveOrdering(list);
         for (Move m: list){
             Board next = makeMove(b, m);
-            int eval = minimax(next, depth - 1, originalDepth, alpha, beta, false, nodeCounts);
-            maxEval = std::max(eval, maxEval);
-            alpha = std::max(alpha, eval);
+            searchResult currentResult = minimax(next, depth - 1, originalDepth, alpha, beta, false, nodeCounts);
+            if (currentResult.eval > maxEval){
+                maxEval = currentResult.eval;
+                bestMove = m;
+            }
+            
+            alpha = std::max(alpha, currentResult.eval);
             if (beta <= alpha){
                 break;
             }
         }
-        return maxEval;
+        return {maxEval, bestMove};
 
 
     } else {
@@ -43,21 +39,85 @@ int minimax(Board& b, int depth, int originalDepth, int alpha, int beta, bool ma
         MoveList list = generateLegalMoves(b);
         if (list.empty()){
             if (isInCheck(b, false)){
-                return 100000 - (originalDepth - depth);
+                return {100000 - (originalDepth - depth), Move::nullMove()};
             } else {
-                return 0;
+                return {0, Move::nullMove()};
             }
         }
 
+        moveOrdering(list);
         for (Move m: list){
             Board next = makeMove(b, m);
-            int eval = minimax(next, depth - 1, originalDepth, alpha, beta, true, nodeCounts);
-            minEval = std::min(eval, minEval);
-            beta = std::min(beta, eval);
+            searchResult currentResult = minimax(next, depth - 1, originalDepth, alpha, beta, true, nodeCounts);
+            if (currentResult.eval < minEval){
+                minEval = currentResult.eval;
+                bestMove = m;
+            }
+
+            beta = std::min(beta, currentResult.eval);
             if (beta <= alpha){
                 break;
             }
         }
-        return minEval;
+        return {minEval, bestMove};
     }
 }
+
+
+moveListEval iterativeDeepening(Board& b, int maxDepth){
+    std::vector<Move> bestMoves;
+    std::vector<int> evaluations;
+    Board current = b;
+    const auto searchTimeLimit = std::chrono::seconds(30);
+    auto startTime = std::chrono::steady_clock::now();
+    
+
+    for (int i = 1; i <= maxDepth; i++){
+        std::vector<int> nodeCounts(i + 1, 0);
+        searchResult depthBestMove = minimax(current, i, i, -1000000, 1000000, current.whiteToMove, nodeCounts);
+
+        if (!(depthBestMove.bestMove.isValid())){
+            break;
+        }
+
+        bestMoves.push_back(depthBestMove.bestMove);
+        evaluations.push_back(depthBestMove.eval);
+
+
+        if (i == maxDepth){
+            for (int j = 0; j <= maxDepth; j++){
+                std::cout << "Nodes at depth " << j << ": " << nodeCounts[j] << "\n"; 
+            }
+        }
+
+        auto elapsedTime = std::chrono::steady_clock::now() - startTime;
+        if (elapsedTime >= searchTimeLimit){
+            std::cout << "Time limit passed. Stopping move search." << std::endl;
+            break;
+        }
+    }
+
+    return {bestMoves, evaluations};
+
+}
+
+
+void moveOrdering(MoveList& movelist){
+    std::sort(movelist.begin(), movelist.end(), [](Move a, Move b){
+        int scoreA = (a.capturedPieceType != -1) ? (materialValues[a.capturedPieceType % 6] - materialValues[a.pieceType % 6]) : 0;
+        int scoreB = (b.capturedPieceType != -1) ? (materialValues[b.capturedPieceType % 6] - materialValues[b.pieceType % 6]) : 0;
+        return (scoreA > scoreB);
+    });
+}
+
+
+
+void moveListPrinter(std::vector<Move> moveList, std::vector<int> evalList){
+    for (int i = 0; i < evalList.size(); i++){
+        std::cout << "Depth " << i + 1 << ": " << moveList[i].fromSquare << " to " << moveList[i].toSquare << "\n";
+        std::cout << "Evaluation: " << evalList[i] << "\n"; 
+    }
+}
+
+
+

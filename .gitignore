@@ -11,3 +11,5 @@ piecemove.exe
 bitboards.cpp
 bitboards.exe
 knightLookupTables.txt
+testSearch.cpp
+testSearch.h

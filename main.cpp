@@ -1,7 +1,7 @@
 #include "Zobrist.h"
 #include "Move.h"
 #include "Eval.h"
-#include "Search.h"
+#include "testSearch.h"
 #include <chrono>
 
 int main(){
@@ -214,11 +214,18 @@ int main(){
 
 
     // minimax move search algo
+    /*
     int evalStartD4 = minimaxRoot(allBoards, 4, INT_MIN, INT_MAX, true);
     std::cout << "Max eval at depth 4: " << evalStartD4 << "\n\n";
 
     int evalWhiteAdvantage = minimaxRoot(whiteAdvantageBoard, 3, INT_MIN, INT_MAX, true);
     std::cout << "Max eval at depth 3: " << evalWhiteAdvantage << std::endl;
- 
+    */
+
+
+    moveListEval depth6 = iterativeDeepening(allBoards, 6);
+    moveListPrinter(depth6.moveList, depth6.evalList);
+
+
     return 0;
 }

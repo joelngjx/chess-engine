@@ -623,12 +623,20 @@ MoveList generateLegalMoves(const Board &b){
             while (attackBoard != 0ULL){
                 int toSquare = popLSB(&attackBoard);
                 std::uint8_t moveFlag = 0;
+                int capturedType = -1;
 
                 if ((1ULL << toSquare) & enemyPieces){
                     moveFlag = FLAG_CAPTURE;
+
+                    for (int capt = (6 - sideOffset); capt < (12 - sideOffset); capt++){
+                        if ((1ULL << toSquare) & temp.boards[capt].board){
+                            capturedType = capt;
+                            break;
+                        }
+                    }
                 }
 
-                Move m{fromSquare, toSquare, pieceType, moveFlag};
+                Move m{fromSquare, toSquare, pieceType, moveFlag, capturedType};
                 Board postMoveBoard = makeMove(b, m);
                 if (!isInCheck(postMoveBoard, whiteTurn)){
                     addMove(list, m);

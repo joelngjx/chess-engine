@@ -25,7 +25,16 @@ struct Move{
     int fromSquare;
     int toSquare;
     int pieceType;  // enum
+    int capturedPieceType = -1;
     std::uint8_t flags;
+
+    static Move nullMove(){
+        return Move{-1, -1, -1, 0b0000};
+    }
+
+    bool isValid() const {
+        return fromSquare != -1;
+    }
 };
 
 using MoveList = std::vector<Move>;
