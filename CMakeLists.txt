@@ -11,5 +11,5 @@ add_executable(chess
     Zobrist.cpp
     Move.cpp
     Eval.cpp
-    testSearch.cpp
+    Search.cpp
 )

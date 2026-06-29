@@ -1,10 +1,12 @@
 #include "Search.h"
 
 
+// alpha -- best score found by maximising side (lower bound)
+// beta -- best score found by minimising side (upper bound)
 searchResult minimax(Board& b, int depth, int originalDepth, int alpha, int beta, bool maximisingSide, std::vector<int>& nodeCounts){
     nodeCounts[originalDepth - depth]++;
     Move bestMove = Move::nullMove();
-    if (depth == 0) return {evaluate(b), bestMove};
+    if (depth == 0) return {quiescence(b, alpha, beta), bestMove};
 
     if (maximisingSide){
         int maxEval = INT_MIN;
@@ -76,6 +78,13 @@ moveListEval iterativeDeepening(Board& b, int maxDepth){
         std::vector<int> nodeCounts(i + 1, 0);
         searchResult depthBestMove = minimax(current, i, i, -1000000, 1000000, current.whiteToMove, nodeCounts);
 
+
+        std::cout << "Depth " << i 
+          << " from=" << depthBestMove.bestMove.fromSquare
+          << " to=" << depthBestMove.bestMove.toSquare
+          << " valid=" << depthBestMove.bestMove.isValid() << "\n";
+
+
         if (!(depthBestMove.bestMove.isValid())){
             break;
         }
@@ -111,7 +120,6 @@ void moveOrdering(MoveList& movelist){
 }
 
 
-
 void moveListPrinter(std::vector<Move> moveList, std::vector<int> evalList){
     for (int i = 0; i < evalList.size(); i++){
         std::cout << "Depth " << i + 1 << ": " << moveList[i].fromSquare << " to " << moveList[i].toSquare << "\n";
@@ -120,4 +128,51 @@ void moveListPrinter(std::vector<Move> moveList, std::vector<int> evalList){
 }
 
 
+int quiescence(Board& b, int alpha, int beta){
+    int staticEval = evaluate(b);
 
+    int bestValue = staticEval;
+    if (bestValue >= beta){
+        return bestValue;
+    }
+    if (bestValue > alpha){
+        alpha = bestValue;
+    }
+
+    // checking capture moves
+    MoveList list = generateLegalMoves(b);
+    MoveList captureList;
+    for (Move m: list){
+        if (m.flags & FLAG_CAPTURE){
+            captureList.push_back(m);
+        }
+    }
+
+    moveOrdering(captureList);
+
+    for (Move capture: captureList){
+        Board captured = makeMove(b, capture);
+        int score = quiescence(captured, alpha, beta);
+
+        if (score >= beta){
+            return score;
+        }
+        if (score > bestValue){
+            bestValue = score;
+        }
+        if (score > alpha){
+            alpha = score;
+        }
+
+    }
+
+    return bestValue;
+}
+
+
+
+/*
+bugs
+1. iterativeDeepening and MoveListPrinter do not produce the intended output
+    - possible fix: error in depthBestMove.bestMove.isValid()
+*/

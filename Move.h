@@ -25,8 +25,8 @@ struct Move{
     int fromSquare;
     int toSquare;
     int pieceType;  // enum
-    int capturedPieceType = -1;
     std::uint8_t flags;
+    int capturedPieceType = -1;
 
     static Move nullMove(){
         return Move{-1, -1, -1, 0b0000};

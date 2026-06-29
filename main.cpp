@@ -1,7 +1,7 @@
 #include "Zobrist.h"
 #include "Move.h"
 #include "Eval.h"
-#include "testSearch.h"
+#include "Search.h"
 #include <chrono>
 
 int main(){
@@ -223,8 +223,8 @@ int main(){
     */
 
 
-    moveListEval depth6 = iterativeDeepening(allBoards, 6);
-    moveListPrinter(depth6.moveList, depth6.evalList);
+    moveListEval depth8 = iterativeDeepening(allBoards, 4);
+    moveListPrinter(depth8.moveList, depth8.evalList);
 
 
     return 0;

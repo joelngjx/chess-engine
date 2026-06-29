@@ -636,7 +636,13 @@ MoveList generateLegalMoves(const Board &b){
                     }
                 }
 
-                Move m{fromSquare, toSquare, pieceType, moveFlag, capturedType};
+                Move m;
+                if (capturedType != -1){
+                    m = {fromSquare, toSquare, pieceType, moveFlag, capturedType};
+                } else {
+                    m = {fromSquare, toSquare, pieceType, moveFlag};
+                }
+                
                 Board postMoveBoard = makeMove(b, m);
                 if (!isInCheck(postMoveBoard, whiteTurn)){
                     addMove(list, m);
